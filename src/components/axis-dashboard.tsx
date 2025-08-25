@@ -7,6 +7,8 @@ import { TrendingUp, Target, Briefcase, Calendar, Filter, Download } from "lucid
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AxisData } from "@/data/okr-data";
+import { negocios, celulas } from "@/data/organization";
+import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface AxisDashboardProps {
@@ -22,8 +24,38 @@ const colorVariants = {
 };
 
 export function AxisDashboard({ data }: AxisDashboardProps) {
-  // Dados para gráfico de barras - progresso dos OKRs
-  const okrProgress = data.okrs.map((okr, index) => ({
+  // Filtros organizacionais
+  const [negocioFilter, setNegocioFilter] = useState<string>("todos");
+  const [celulaFilter, setCelulaFilter] = useState<string>("todas");
+  const [periodFilter, setPeriodFilter] = useState<string>("2025-01");
+
+  const months2025 = [
+    { value: "2025-01", label: "Janeiro/2025" },
+    { value: "2025-02", label: "Fevereiro/2025" },
+    { value: "2025-03", label: "Março/2025" },
+    { value: "2025-04", label: "Abril/2025" },
+    { value: "2025-05", label: "Maio/2025" },
+    { value: "2025-06", label: "Junho/2025" },
+    { value: "2025-07", label: "Julho/2025" },
+    { value: "2025-08", label: "Agosto/2025" },
+    { value: "2025-09", label: "Setembro/2025" },
+    { value: "2025-10", label: "Outubro/2025" },
+    { value: "2025-11", label: "Novembro/2025" },
+    { value: "2025-12", label: "Dezembro/2025" },
+  ];
+
+  const filteredOkrs = useMemo(() => {
+    return data.okrs.filter((okr) => {
+      const matchesNegocio =
+        negocioFilter === "todos" || okr.negocioId?.toString() === negocioFilter;
+      const matchesCelula =
+        celulaFilter === "todas" || okr.celulaIds?.map(String).includes(celulaFilter);
+      return matchesNegocio && matchesCelula;
+    });
+  }, [data.okrs, negocioFilter, celulaFilter]);
+
+  // Dados para gráfico de barras - progresso dos OKRs (já filtrados)
+  const okrProgress = filteredOkrs.map((okr, index) => ({
     name: `OKR ${index + 1}`,
     progresso: okr.indicadores.percentual,
     status: okr.indicadores.status
@@ -36,13 +68,44 @@ export function AxisDashboard({ data }: AxisDashboardProps) {
     { name: "Atrasados", value: data.metrics.projetos.atrasados, color: "#ef4444" }
   ];
 
-  // Timeline mockada dos projetos
-  const projectTimeline = [
-    { projeto: "Projeto A", inicio: "Jan", fim: "Mar", status: "concluido" },
-    { projeto: "Projeto B", inicio: "Fev", fim: "Abr", status: "andamento" },
-    { projeto: "Projeto C", inicio: "Mar", fim: "Mai", status: "atrasado" },
-    { projeto: "Projeto D", inicio: "Abr", fim: "Jun", status: "andamento" }
+  // Helpers de período
+  const monthNamesPt = [
+    "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"
   ];
+  const formatRangeFromPeriod = (period: string, span: number) => {
+    const [yearStr, monthStr] = period.split("-");
+    const year = Number(yearStr);
+    const monthIndex = Number(monthStr) - 1; // 0-based
+    const endIndex = (monthIndex + Math.max(0, span - 1)) % 12;
+    return `${monthNamesPt[monthIndex]} - ${monthNamesPt[endIndex]}`;
+  };
+
+  // Timeline dinâmica a partir dos projetos vinculados aos OKRs filtrados
+  const projectTimeline = useMemo(() => {
+    type StatusTimeline = "concluido" | "andamento" | "atrasado";
+    const statusRank: Record<StatusTimeline, number> = { concluido: 0, andamento: 1, atrasado: 2 };
+    const mapOkrStatus = (s: string): StatusTimeline =>
+      s === "success" ? "concluido" : s === "warning" ? "andamento" : "atrasado";
+
+    const projectToStatus = new Map<string, StatusTimeline>();
+    filteredOkrs.forEach((okr) => {
+      const st = mapOkrStatus(okr.indicadores.status);
+      okr.projetosVinculados.forEach((p) => {
+        const existing = projectToStatus.get(p);
+        if (!existing || statusRank[st] > statusRank[existing]) {
+          projectToStatus.set(p, st);
+        }
+      });
+    });
+
+    const rangeLabel = formatRangeFromPeriod(periodFilter, 3);
+    return Array.from(projectToStatus.entries()).slice(0, 8).map(([projeto, s]) => ({
+      projeto,
+      inicio: rangeLabel.split(" - ")[0],
+      fim: rangeLabel.split(" - ")[1],
+      status: s,
+    }));
+  }, [filteredOkrs, periodFilter]);
 
   return (
     <div className="space-y-6">
@@ -62,47 +125,44 @@ export function AxisDashboard({ data }: AxisDashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select>
+            <Select value={celulaFilter} onValueChange={setCelulaFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Célula" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todas">Todas as Células</SelectItem>
-                <SelectItem value="gestao">Gestão</SelectItem>
-                <SelectItem value="operacao">Operação</SelectItem>
+                {celulas.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {c.sigla} - {c.nome}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            
-            <Select>
+
+            <Select value={negocioFilter} onValueChange={setNegocioFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Negócio" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos os Negócios</SelectItem>
-                <SelectItem value="saude">Saúde</SelectItem>
-                <SelectItem value="educacao">Educação</SelectItem>
+                {negocios.map((n) => (
+                  <SelectItem key={n.id} value={String(n.id)}>
+                    {n.nome}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Contrato" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os Contratos</SelectItem>
-                <SelectItem value="publico">Público</SelectItem>
-                <SelectItem value="privado">Privado</SelectItem>
-              </SelectContent>
-            </Select>
             
-            <Select>
+            
+            <Select value={periodFilter} onValueChange={setPeriodFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Período" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="2025">2025</SelectItem>
-                <SelectItem value="q1-2025">Q1 2025</SelectItem>
-                <SelectItem value="q2-2025">Q2 2025</SelectItem>
+                {months2025.map((m) => (
+                  <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -123,7 +183,7 @@ export function AxisDashboard({ data }: AxisDashboardProps) {
         
         <MetricCard
           title="OKRs Ativos"
-          value={data.okrs.length}
+          value={filteredOkrs.length}
           subtitle="Objetivos estratégicos"
           icon={<Target className="w-4 h-4" />}
           variant="default"

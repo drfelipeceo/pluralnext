@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Calendar, User, Target, FileText } from "lucide-react";
 import { OKR } from "@/data/okr-data";
+import { negocioIdToNome, celulaIdToSigla } from "@/data/organization";
 
 interface OKRTableProps {
   okrs: OKR[];
@@ -29,6 +30,7 @@ export function OKRTable({ okrs, title }: OKRTableProps) {
                 <TableHead className="min-w-[300px]">Resultados-Chave</TableHead>
                 <TableHead className="min-w-[150px]">Indicadores</TableHead>
                 <TableHead className="min-w-[200px]">Projetos Vinculados</TableHead>
+                <TableHead className="min-w-[220px]">Organização</TableHead>
                 <TableHead className="min-w-[100px]">Status</TableHead>
                 <TableHead className="min-w-[120px]">Responsável</TableHead>
                 <TableHead className="min-w-[100px]">Prazo</TableHead>
@@ -79,6 +81,24 @@ export function OKRTable({ okrs, title }: OKRTableProps) {
                           {projeto}
                         </Badge>
                       ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1 max-w-[240px]">
+                      {okr.negocioId && (
+                        <Badge variant="outline" className="w-fit text-xs">
+                          Negócio: {negocioIdToNome.get(okr.negocioId) || okr.negocioId}
+                        </Badge>
+                      )}
+                      {okr.celulaIds && okr.celulaIds.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {okr.celulaIds.map((id) => (
+                            <Badge key={id} variant="secondary" className="text-xs">
+                              {celulaIdToSigla.get(id) || id}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>

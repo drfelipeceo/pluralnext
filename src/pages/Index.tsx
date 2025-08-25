@@ -2,6 +2,7 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { DashboardOverview } from "@/components/dashboard-overview";
 import { StrategicAxisCard } from "@/components/strategic-axis-card";
+import { StrategicPyramid } from "@/components/strategic-pyramid";
 import { useNavigate } from "react-router-dom";
 import { axisData } from "@/data/okr-data";
 
@@ -67,6 +68,11 @@ const Index = () => {
 
         {/* Dashboard Overview */}
         <DashboardOverview />
+
+        {/* Pirâmide Estratégica */}
+        <div className="mb-8">
+          <StrategicPyramid />
+        </div>
 
         {/* Strategic Axes */}
         <div className="space-y-6">

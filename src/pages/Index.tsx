@@ -3,59 +3,23 @@ import { Footer } from "@/components/footer";
 import { DashboardOverview } from "@/components/dashboard-overview";
 import { StrategicAxisCard } from "@/components/strategic-axis-card";
 import { useNavigate } from "react-router-dom";
+import { axisData } from "@/data/okr-data";
 
-const strategicAxes = [
-  {
-    id: "economico-financeiro",
-    title: "Econômico-Financeiro",
-    description: "Aumentar rentabilidade, controle financeiro em tempo real, inteligência de dados e cultura de integridade",
-    progress: 78,
-    projectsCount: 20,
-    completedOkrs: 7,
-    totalOkrs: 9,
-    color: "blue" as const
-  },
-  {
-    id: "esg-risco-compliance",
-    title: "ESG, Risco & Compliance",
-    description: "Conformidade legal, governança estruturada, gestão de riscos, integridade institucional e agenda ESG",
-    progress: 65,
-    projectsCount: 15,
-    completedOkrs: 6,
-    totalOkrs: 9,
-    color: "green" as const
-  },
-  {
-    id: "patrimonio-humano",
-    title: "Patrimônio Humano",
-    description: "Capital humano estratégico, desenvolvimento de líderes, engajamento e gestão de pessoas por dados",
-    progress: 82,
-    projectsCount: 19,
-    completedOkrs: 8,
-    totalOkrs: 10,
-    color: "teal" as const
-  },
-  {
-    id: "mercado-marketing-clientes",
-    title: "Mercado, Marketing & Clientes",
-    description: "Inteligência de mercado, ampliar base de clientes, customer success e consolidação da marca",
-    progress: 59,
-    projectsCount: 15,
-    completedOkrs: 5,
-    totalOkrs: 8,
-    color: "orange" as const
-  },
-  {
-    id: "processos-internos-tecnologia",
-    title: "Processos Internos & Tecnologia",
-    description: "Base tecnológica corporativa, automação com IA, cultura de inovação e ecossistema digital",
-    progress: 71,
-    projectsCount: 20,
-    completedOkrs: 6,
-    totalOkrs: 8,
-    color: "dark-teal" as const
-  }
-];
+const strategicAxes = axisData.map(axis => {
+  const completedOkrs = axis.okrs.filter(o => o.indicadores.status === "success").length;
+  const totalOkrs = axis.okrs.length;
+  const projectsCount = axis.metrics.projetos.concluidos + axis.metrics.projetos.andamento + axis.metrics.projetos.atrasados;
+  return {
+    id: axis.id,
+    title: axis.title,
+    description: axis.description,
+    progress: axis.metrics.performance,
+    projectsCount,
+    completedOkrs,
+    totalOkrs,
+    color: axis.color as const
+  };
+});
 
 const Index = () => {
   const navigate = useNavigate();
@@ -76,18 +40,27 @@ const Index = () => {
               Acompanhe o progresso em tempo real e tome decisões baseadas em dados.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <div className="text-2xl font-bold">73%</div>
-                <div className="text-sm text-white/80">Performance Geral</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <div className="text-2xl font-bold">89</div>
-                <div className="text-sm text-white/80">Projetos Ativos</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <div className="text-2xl font-bold">42</div>
-                <div className="text-sm text-white/80">OKRs Estratégicos</div>
-              </div>
+              {(() => {
+                const performanceAvg = Math.round(axisData.reduce((acc, a) => acc + a.metrics.performance, 0) / axisData.length);
+                const projectsAndamento = axisData.reduce((acc, a) => acc + a.metrics.projetos.andamento, 0);
+                const totalOkrs = axisData.reduce((acc, a) => acc + a.okrs.length, 0);
+                return (
+                  <>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                      <div className="text-2xl font-bold">{performanceAvg}%</div>
+                      <div className="text-sm text-white/80">Performance Geral</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                      <div className="text-2xl font-bold">{projectsAndamento}</div>
+                      <div className="text-sm text-white/80">Projetos Ativos</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                      <div className="text-2xl font-bold">{totalOkrs}</div>
+                      <div className="text-sm text-white/80">OKRs Estratégicos</div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>

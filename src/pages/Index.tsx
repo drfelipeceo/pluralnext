@@ -2,9 +2,11 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { DashboardOverview } from "@/components/dashboard-overview";
 import { StrategicAxisCard } from "@/components/strategic-axis-card";
+import { useNavigate } from "react-router-dom";
 
 const strategicAxes = [
   {
+    id: "economico-financeiro",
     title: "Econômico-Financeiro",
     description: "Aumentar rentabilidade, controle financeiro em tempo real, inteligência de dados e cultura de integridade",
     progress: 78,
@@ -14,6 +16,7 @@ const strategicAxes = [
     color: "blue" as const
   },
   {
+    id: "esg-risco-compliance",
     title: "ESG, Risco & Compliance",
     description: "Conformidade legal, governança estruturada, gestão de riscos, integridade institucional e agenda ESG",
     progress: 65,
@@ -23,6 +26,7 @@ const strategicAxes = [
     color: "green" as const
   },
   {
+    id: "patrimonio-humano",
     title: "Patrimônio Humano",
     description: "Capital humano estratégico, desenvolvimento de líderes, engajamento e gestão de pessoas por dados",
     progress: 82,
@@ -32,6 +36,7 @@ const strategicAxes = [
     color: "teal" as const
   },
   {
+    id: "mercado-marketing-clientes",
     title: "Mercado, Marketing & Clientes",
     description: "Inteligência de mercado, ampliar base de clientes, customer success e consolidação da marca",
     progress: 59,
@@ -41,6 +46,7 @@ const strategicAxes = [
     color: "orange" as const
   },
   {
+    id: "processos-internos-tecnologia",
     title: "Processos Internos & Tecnologia",
     description: "Base tecnológica corporativa, automação com IA, cultura de inovação e ecossistema digital",
     progress: 71,
@@ -52,6 +58,8 @@ const strategicAxes = [
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
+  
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -104,8 +112,7 @@ const Index = () => {
                 key={axis.title}
                 {...axis}
                 onClick={() => {
-                  // TODO: Navigate to detailed view
-                  console.log(`Navigating to ${axis.title} details`);
+                  navigate(`/eixo/${axis.id}`);
                 }}
               />
             ))}

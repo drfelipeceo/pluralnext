@@ -5,6 +5,9 @@ import { StrategicAxisCard } from "@/components/strategic-axis-card";
 import { StrategicPyramid } from "@/components/strategic-pyramid";
 import { useNavigate } from "react-router-dom";
 import { axisData } from "@/data/okr-data";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, Eye, EyeOff } from "lucide-react";
 
 const strategicAxes = axisData.map(axis => {
   const completedOkrs = axis.okrs.filter(o => o.indicadores.status === "success").length;
@@ -24,6 +27,7 @@ const strategicAxes = axisData.map(axis => {
 
 const Index = () => {
   const navigate = useNavigate();
+  const [showPyramid, setShowPyramid] = useState(false);
   
   return (
     <div className="min-h-screen bg-background">
@@ -69,10 +73,34 @@ const Index = () => {
         {/* Dashboard Overview */}
         <DashboardOverview />
 
-        {/* Pirâmide Estratégica */}
-        <div className="mb-8">
-          <StrategicPyramid />
+        {/* Botão para alternar Pirâmide Estratégica */}
+        <div className="flex justify-center mb-6">
+          <Button
+            onClick={() => setShowPyramid(!showPyramid)}
+            variant="outline"
+            size="lg"
+            className="gap-2 shadow-card hover:shadow-elevated transition-executive"
+          >
+            {showPyramid ? (
+              <>
+                <EyeOff className="w-5 h-5" />
+                Ocultar Pirâmide Estratégica
+              </>
+            ) : (
+              <>
+                <Eye className="w-5 h-5" />
+                Mostrar Pirâmide Estratégica
+              </>
+            )}
+          </Button>
         </div>
+
+        {/* Pirâmide Estratégica */}
+        {showPyramid && (
+          <div className="mb-8">
+            <StrategicPyramid />
+          </div>
+        )}
 
         {/* Strategic Axes */}
         <div className="space-y-6">
